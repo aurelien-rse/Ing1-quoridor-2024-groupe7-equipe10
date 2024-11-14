@@ -1,13 +1,9 @@
 #include <stdio.h>
 void intialisation plateau(char plateau_pions[9][9],char plateau_vbarierre[8][9], char plateau_hbarierre[9][8]) {
-    char plateau_pions[9][9];
-    char plateau_vbarierre[8][9];
-    char plateau_hbarierre[9][8];
-
     // Initialisation du plateau
     for(int a=0; a<9;a++) {
         for(int b=0;b<9; b++) {
-            plateau_pions[a][b]='a';
+            plateau_pions[a][b]=' ';
         }
     }
     for(int a=0; a<9;a++) {
@@ -20,7 +16,6 @@ void intialisation plateau(char plateau_pions[9][9],char plateau_vbarierre[8][9]
             plateau_hbarierre[a][b]='_';
         }
     }
-    //plateau_pions[1][8]='a';
 }
 void affciche_plateau(char plateau_pions[9][9],char plateau_vbarierre[8][9], char plateau_hbarierre[9][8]){ // Affichage du plateau
     for(int a=0; a<8;a++) {
