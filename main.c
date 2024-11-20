@@ -17,7 +17,7 @@ void affiche_menu( int menu) {
             printf("3.Affiche aide \n");
         break;
         case 4:
-            printf("4.Afficher scores et jouueurs \n");
+            printf("4.Afficher scores et joueurs \n");
         break;
         case 5:
             break;
