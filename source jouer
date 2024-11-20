@@ -1,0 +1,56 @@
+#include "sourc2e.c"
+#include "header2.h"
+int menu_joue (int a_jouer) {
+    int jouer;
+    printf("1.Deplacer le pion\n2.Barrieres\n3.Passer son tour\n4.Annulation du coup precedent\n");
+    scanf(" %d",&jouer);
+    switch (jouer) {
+        case 1:
+            printf("deplacer le pion\n");
+            a_jouer=retourner_1(a_jouer);
+            return a_jouer;
+        case 2:
+            printf("barrieres\n");
+            a_jouer=retourner_1(a_jouer);
+            return a_jouer;
+        case 3:
+           return ++a_jouer;
+        case 4:
+            printf("annulation du coup precedent\n");
+            a_jouer=retourner_1(a_jouer);
+            return a_jouer;
+        default:
+            printf("Vous n'avez pas choisie un option proposer\n");
+            return a_jouer;
+    }
+}
+int verifier_colonne1(char plateau[9][9],int a) {
+    for (int i = 0; i < 9; i++) {
+        if (plateau[i][0]=='4') {
+            return ++a;
+        }
+    }return a;
+}
+int verifier_colonne2(char plateau[9][9],int a) {
+    for (int i = 0; i < 9; i++) {
+        if (plateau[i][0]=='3') {
+            return ++a;
+        }
+    }return a;
+}
+int verifier_ligne1(char plateau[9][9],int a) {
+    for (int i = 0; i < 9; i++) {
+        if (plateau[0][i]=='1') {
+            return ++a;
+        }
+    }return a;
+}
+int verifier_ligne2(char plateau[9][9],int b) {
+    for (int i=0; i<9; i++) {
+        printf(" .%c.\n",plateau[8][i]);
+        printf("%d",i);
+        if (plateau[8][i]=='2') {
+            return ++b;
+        }
+    }return b;
+}
