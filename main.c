@@ -16,9 +16,13 @@
 #define BUTTON_PIN2 3
 #define BUTTON_PIN3 4
 #define BUTTON_PIN4 5
+#define BUZZER_PIN 6 // Connectez le buzzer à la broche 8
+bool reveil = false;
 bool is12HourFormat = false;
 bool pm = false;
 int loca =0;
+int alarmHour = 6;    // Heure par défaut de l'alarme
+int alarmMinute = 0;  // Minute par défaut de l'alarme
 LedControl matriceLed(DinPin, ClockPin, LoadPin, Matrices);
 RTC_DS1307 RTC;
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
@@ -48,6 +52,10 @@ void setup() {
   display.clearDisplay();
   pinMode(BUTTON_PIN, INPUT);
   pinMode(BUTTON_PIN2, INPUT);
+  pinMode(BUTTON_PIN3, INPUT);
+  pinMode(BUTTON_PIN4, INPUT);
+  display.setTextSize(1); 
+  display.setTextColor(SSD1306_WHITE);
 }
 
 void loop() {
@@ -55,7 +63,13 @@ void loop() {
   // Heure actuelle
   int heures = now.hour();
   int minutes = now.minute();
-  
+  if (reveil){
+    if (alarmHour==heures && alarmMinute==minutes){
+      tone(BUZZER_PIN, 1000); // Jouer une tonalité de 1000 Hz
+      delay(1000);            // Faire sonner pendant 1 seconde
+      noTone(BUZZER_PIN);     // Arrêter le buzzer
+      }
+  }
   if (is12HourFormat) {
     if (heures >=12) {
         pm = true;
@@ -66,7 +80,6 @@ void loop() {
       
 
 }
-  
   
   int digits[] = {
     heures / 10,   // Dizaine des heures
@@ -82,6 +95,26 @@ void loop() {
     delay(200);
     loca =1;
   }
+  if (digitalRead(BUTTON_PIN3) == HIGH && loca==0) {
+    delay(200);
+    loca =3;
+  }
+   if (digitalRead(BUTTON_PIN4) == HIGH && loca==3) {
+   delay(200);
+   loca =0;
+  }
+  if (digitalRead(BUTTON_PIN) == HIGH && loca==3) {
+   delay(200);
+   reveil=!reveil;
+  }
+  if (digitalRead(BUTTON_PIN2) == HIGH && loca==3) {
+   delay(200);
+   loca=4;
+  }
+  if (loca==4) {
+    changreveil(alarmHour ,alarmMinute);
+    loca=3;
+  }
    if (digitalRead(BUTTON_PIN4) == HIGH && loca==1) {
       delay(200);
     loca=0;
@@ -91,6 +124,16 @@ void loop() {
      loca=2;
    }
    if (loca==2) {
+  display.clearDisplay();
+  display.setCursor(1,0);  // Position du texte sur l'écran
+  display.print(F("Pour le changement"));
+  display.setCursor(1,10);  // Position du texte sur l'écran
+  display.print(F("2.Augmenter de 1"));
+  display.setCursor(1,20);  // Position du texte sur l'écran
+  display.print(F("3.Diminuer de 1"));
+  display.setCursor(1,30);  // Position du texte sur l'écran
+  display.print(F("4.Confirmation"));
+  display.display(); 
      changheur(heures,minutes);
      loca=1;
   } 
@@ -103,28 +146,27 @@ void loop() {
     afficherChiffre(digits[3-i], i);                         
     
   }
-  display.setTextSize(1);
   display.clearDisplay();
   display.setCursor(1,2);  // Position du texte sur l'écran
-  display.print("1:Passer en am/pm");
+  display.print(F("1:Passer en am/pm"));
   display.display(); 
   display.drawLine(0,12,127,12,WHITE);
   display.setCursor(1,15);  // Position du texte sur l'écran
-  display.print("2:Regler heure");
+  display.print(F("2:Regler heure"));
   display.drawLine(0,25,127,25,WHITE);
   display.setCursor(1,28);  // Position du texte sur l'écran
-  display.print("3:Reveil");
+  display.print(F("3:Reveil"));
   display.drawLine(0,38,127,38,WHITE);
   display.setCursor(1,41);  // Position du texte sur l'écran
-  display.print("4:Alarme");
+  display.print(F("4:Alarme"));
   display.drawLine(0,51,127,51,WHITE);
   if (is12HourFormat) {
     if (pm == true){
       display.setCursor(60,55);  // Position du texte sur l'écran
-      display.print("PM");
+      display.print(F("PM"));
     }else{
       display.setCursor(60,55);  // Position du texte sur l'écran
-      display.print("AM");
+      display.print(F("AM"));
     }
   }
   display.display(); 
@@ -135,22 +177,25 @@ void loop() {
 }
 
 if (loca==1){
+  display.clearDisplay();
+  display.setCursor(1,0);  // Position du texte sur l'écran
+  display.print(F("1.Lancer changement")); 
+  display.setCursor(1,9);  // Position du texte sur l'écran
+  display.print(F("4.Quitter"));
+  display.display(); 
   for (int i = 0; i < Matrices; i++) {
     matriceLed.clearDisplay(i);        
     afficherChiffre(digits[3-i], i);                         
   }
-  display.setTextSize(1);
-  display.clearDisplay();
-  display.setCursor(1,2);  // Position du texte sur l'écran
-  display.print("Reglez l'heure");
-  display.display(); 
+  
+
   if (is12HourFormat) {
     if (pm == true){
       display.setCursor(60,55);  // Position du texte sur l'écran
-      display.print("PM");
+      display.print(F("PM"));
     }else{
       display.setCursor(60,55);  // Position du texte sur l'écran
-      display.print("AM");
+      display.print(F("AM"));
     }
   }
   display.display(); 
@@ -159,6 +204,48 @@ if (loca==1){
   matriceLed.setLed(2, 4, 7, true);
   delay(500);
 }
+if (loca==3){
+  display.clearDisplay();
+  display.setCursor(0,0);  // Position du texte sur l'écran
+  display.print(F("1.On/Off")); 
+  display.setCursor(0,10);  // Position du texte sur l'écran
+  display.print(F("2.Reglez le reveil")); 
+  display.setCursor(0,20);  // Position du texte sur l'écran
+  display.print(F("4.Quitter"));
+  display.setCursor(0,40);  // Position du texte sur l'écran
+  display.print(alarmHour);
+  display.setCursor(15,40);  // Position du texte sur l'écran
+  display.print(alarmMinute); 
+  display.display(); 
+  if (reveil==true){
+    display.setCursor(0,50);  // Position du texte sur l'écran
+    display.print(F("ON"));
+    display.display();
+  }else{
+    display.setCursor(0,50);  // Position du texte sur l'écran
+    display.print(F("OFF"));
+    display.display();
+    }
+  }
+  for (int i = 0; i < Matrices; i++) {
+    matriceLed.clearDisplay(i);        
+    afficherChiffre(digits[3-i], i);                         
+  }
+
+  if (is12HourFormat) {
+    if (pm == true){
+      display.setCursor(60,55);  // Position du texte sur l'écran
+      display.print(F("PM"));
+    }else{
+      display.setCursor(60,55);  // Position du texte sur l'écran
+      display.print(F("AM"));
+    }
+  }
+  display.display(); 
+  delay(500);
+  matriceLed.setLed(2, 3, 7, true);
+  matriceLed.setLed(2, 4, 7, true);
+  delay(500);
 }
 
 void afficherChiffre(int chiffre, int adresse) {
@@ -192,12 +279,9 @@ void afficherChiffre(int chiffre, int adresse) {
 }
 
 void changheur (int &heures, int &minutes){
-  heures=0;
-  minutes=0;
   bool hourConfirmed = false;  // Flag pour terminer l'ajustement de l'heure
   bool minuteConfirmed = false;  // Flag pour terminer l'ajustement des minutes
   bool validation =false;
-  
   // Modifier l'heure
   while (!hourConfirmed) {
     // Vérifier si le bouton d'incrémentation est pressé
@@ -271,4 +355,108 @@ void changheur (int &heures, int &minutes){
       RTC.adjust(DateTime(RTC.now().year(), RTC.now().month(), RTC.now().day(), heures, minutes, RTC.now().second()));  // Sauvegarder l'heure et les minutes dans le RTC
     }
   }
+}
+void changreveil (int &alarmHour ,int &alarmMinute){
+  bool hourConfirmed = false;  // Flag pour terminer l'ajustement de l'heure
+  bool minuteConfirmed = false;  // Flag pour terminer l'ajustement des minutes
+  bool validation =false;
+  // Modifier l'heure
+  while (!hourConfirmed) {
+    // Vérifier si le bouton d'incrémentation est pressé
+    if (digitalRead(BUTTON_PIN2) == HIGH) {
+      delay(200);  // Anti-rebond
+      alarmHour = (alarmHour + 1) % 24;  // Incrémenter l'heure, revenir à 0 après 23
+        display.clearDisplay();
+        display.setCursor(1,0);  // Position du texte sur l'écran
+        display.print(F("Pour le changement"));
+        display.setCursor(1,10);  // Position du texte sur l'écran
+        display.print(F("2.Augmenter de 1"));
+        display.setCursor(1,20);  // Position du texte sur l'écran
+        display.print(F("3.Diminuer de 1"));
+        display.setCursor(1,30);  // Position du texte sur l'écran
+        display.print(F("4.Confirmation"));
+        display.setCursor(0,40);  // Position du texte sur l'écran
+        display.print(alarmHour);
+        display.setCursor(15,40);  // Position du texte sur l'écran
+        display.print(alarmMinute); 
+        display.display();
+    }
+
+    // Vérifier si le bouton de décrémentation est pressé
+    if (digitalRead(BUTTON_PIN3) == HIGH) {
+      delay(200);  // Anti-rebond
+      alarmHour = (alarmHour - 1 + 24) % 24;  // Décrémenter l'heure, revenir à 23 après 0
+        display.clearDisplay();
+        display.setCursor(1,0);  // Position du texte sur l'écran
+        display.print(F("Pour le changement"));
+        display.setCursor(1,10);  // Position du texte sur l'écran
+        display.print(F("2.Augmenter de 1"));
+        display.setCursor(1,20);  // Position du texte sur l'écran
+        display.print(F("3.Diminuer de 1"));
+        display.setCursor(1,30);  // Position du texte sur l'écran
+        display.print(F("4.Confirmation"));
+        display.setCursor(0,40);  // Position du texte sur l'écran
+        display.print(alarmHour);
+        display.setCursor(15,40);  // Position du texte sur l'écran
+        display.print(alarmMinute); 
+        display.display();
+    }
+
+    // Vérifier si le bouton de confirmation est pressé pour valider l'heure
+    if (digitalRead(BUTTON_PIN4) == HIGH && validation ==false) {
+      delay(200);
+      hourConfirmed = true;  // Terminer l'ajustement de l'heure
+      }
+  }
+  validation = true;
+  // Modifier les minutes
+  while (!minuteConfirmed) {
+    // Vérifier si le bouton d'incrémentation est pressé pour les minutes
+    if (digitalRead(BUTTON_PIN2) == HIGH) {
+      delay(200);
+      alarmMinute = (alarmMinute + 1) % 60;  // Incrémenter les minutes, revenir à 0 après 59
+        display.clearDisplay();
+        display.setCursor(1,0);  // Position du texte sur l'écran
+        display.print(F("Pour le changement"));
+        display.setCursor(1,10);  // Position du texte sur l'écran
+        display.print(F("2.Augmenter de 1"));
+        display.setCursor(1,20);  // Position du texte sur l'écran
+        display.print(F("3.Diminuer de 1"));
+        display.setCursor(1,30);  // Position du texte sur l'écran
+        display.print(F("4.Confirmation"));
+        display.setCursor(0,40);  // Position du texte sur l'écran
+        display.print(alarmHour);
+        display.setCursor(15,40);  // Position du texte sur l'écran
+        display.print(alarmMinute); 
+        display.display();
+      
+    }
+
+    // Vérifier si le bouton de décrémentation est pressé pour les minutes
+    if (digitalRead(BUTTON_PIN3) == HIGH) {
+      delay(200);
+      alarmMinute = (alarmMinute - 1 + 60) % 60;  // Décrémenter les minutes, revenir à 59 après 0
+    }
+        display.clearDisplay();
+        display.setCursor(1,0);  // Position du texte sur l'écran
+        display.print(F("Pour le changement"));
+        display.setCursor(1,10);  // Position du texte sur l'écran
+        display.print(F("2.Augmenter de 1"));
+        display.setCursor(1,20);  // Position du texte sur l'écran
+        display.print(F("3.Diminuer de 1"));
+        display.setCursor(1,30);  // Position du texte sur l'écran
+        display.print(F("4.Confirmation"));
+        display.setCursor(0,40);  // Position du texte sur l'écran
+        display.print(alarmHour);
+        display.setCursor(15,40);  // Position du texte sur l'écran
+        display.print(alarmMinute); 
+        display.display();
+
+    // Vérifier si le bouton de confirmation est pressé pour valider les minutes
+    if (digitalRead(BUTTON_PIN4) == HIGH && validation == true) {
+      delay(200);
+      minuteConfirmed = true;  // Terminer l'ajustement des minutes
+      
+  }
+}
 }
