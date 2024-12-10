@@ -3,6 +3,7 @@
 #include "RTClib.h"
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <EEPROM.h>
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
@@ -21,8 +22,15 @@ bool reveil = false;
 bool is12HourFormat = false;
 bool pm = false;
 int loca =0;
-int alarmHour = 6;    // Heure par défaut de l'alarme
-int alarmMinute = 0;  // Minute par défaut de l'alarme
+int heures;
+int minutes;
+int adresse = 1017;   
+int adresse1 = 1020;
+int adresse2 = 1023;
+int adresse3 = 1010;
+int adresse4 = 1000;
+int alarmHour = 6;
+int alarmMinute = 0;
 LedControl matriceLed(DinPin, ClockPin, LoadPin, Matrices);
 RTC_DS1307 RTC;
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
@@ -38,9 +46,14 @@ void setup() {
   Serial.begin(115200);
   Wire.begin();
   RTC.begin();
-  if (!RTC.isrunning()) {
-    RTC.adjust(DateTime(__DATE__, __TIME__));  
-  } 
+  if (EEPROM.get(adresse,alarmHour)== 0xFF){
+    RTC.adjust(DateTime(__DATE__, __TIME__));  }
+  else {
+    heures=EEPROM.get(adresse3,heures);
+    minutes=EEPROM.get(adresse4,minutes);
+    RTC.adjust(DateTime(RTC.now().year(), RTC.now().month(), RTC.now().day(), heures, minutes, RTC.now().second()));
+    
+  }
   if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_RESET)) {
   Serial.println(F("Ecran OLED non trouvé"));
   for (;;);  // Arrêt du programme si l'écran ne répond pas
@@ -56,18 +69,21 @@ void setup() {
   pinMode(BUTTON_PIN4, INPUT);
   display.setTextSize(1); 
   display.setTextColor(SSD1306_WHITE);
+  EEPROM.get(adresse,alarmHour);
+  EEPROM.get(adresse1,alarmMinute);
+  EEPROM.get(adresse2,reveil);
+  
 }
 
 void loop() {
-    DateTime now = RTC.now();
+   DateTime now = RTC.now();
   // Heure actuelle
-  int heures = now.hour();
-  int minutes = now.minute();
+  heures = now.hour();
+  minutes = now.minute();
   if (reveil){
     if (alarmHour==heures && alarmMinute==minutes){
-      tone(BUZZER_PIN, 1000); // Jouer une tonalité de 1000 Hz
-      delay(1000);            // Faire sonner pendant 1 seconde
-      noTone(BUZZER_PIN);     // Arrêter le buzzer
+      loca=3;
+      
       }
   }
   if (is12HourFormat) {
@@ -111,6 +127,7 @@ void loop() {
    delay(200);
    loca=4;
   }
+  
   if (loca==4) {
     changreveil(alarmHour ,alarmMinute);
     loca=3;
@@ -246,6 +263,14 @@ if (loca==3){
   matriceLed.setLed(2, 3, 7, true);
   matriceLed.setLed(2, 4, 7, true);
   delay(500);
+  if (pm==true²){
+    heures=heures+12;
+  }
+  EEPROM.put(adresse2, reveil);
+  EEPROM.put(adresse,alarmHour);
+  EEPROM.put(adresse1,alarmMinute);
+  EEPROM.put(adresse3, heures);
+  EEPROM.put(adresse4,minutes);
 }
 
 void afficherChiffre(int chiffre, int adresse) {
@@ -458,5 +483,5 @@ void changreveil (int &alarmHour ,int &alarmMinute){
       minuteConfirmed = true;  // Terminer l'ajustement des minutes
       
   }
-}
+ }
 }
